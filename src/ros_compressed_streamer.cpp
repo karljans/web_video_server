@@ -1,3 +1,5 @@
+#include <rclcpp/qos.hpp>
+#include <rmw/qos_profiles.h>
 #include "web_video_server/ros_compressed_streamer.h"
 
 namespace web_video_server
@@ -17,9 +19,17 @@ RosCompressedStreamer::~RosCompressedStreamer()
 }
 
 void RosCompressedStreamer::start() {
+
+  // Create a QoS profile using the sensor message preset
+  rmw_qos_profile_t sensor_qos = rmw_qos_profile_sensor_data;
+
+  auto compressed_qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(sensor_qos));
+  compressed_qos.get_rmw_qos_profile() = sensor_qos;
+
   std::string compressed_topic = topic_ + "/compressed";
-  image_sub_ = nh_->create_subscription<sensor_msgs::msg::CompressedImage>(
-    compressed_topic, 1, std::bind(&RosCompressedStreamer::imageCallback, this, std::placeholders::_1));
+
+  image_sub_ = nh_->create_subscription<sensor_msgs::msg::CompressedImage>(compressed_topic, compressed_qos, 
+                                                                           std::bind(&RosCompressedStreamer::imageCallback, this, std::placeholders::_1));
 }
 
 void RosCompressedStreamer::restreamFrame(double max_age)
