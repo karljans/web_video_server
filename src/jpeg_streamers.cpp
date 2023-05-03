@@ -8,7 +8,7 @@ MjpegStreamer::MjpegStreamer(const async_web_server_cpp::HttpRequest &request,
                              async_web_server_cpp::HttpConnectionPtr connection, rclcpp::Node::SharedPtr nh) :
   ImageTransportImageStreamer(request, connection, nh), stream_(std::bind(&rclcpp::Node::now, nh), connection)
 {
-  quality_ = request.get_query_param_value_or_default<int>("quality", 95);
+  quality_ = request.get_query_param_value_or_default<int>("quality", 85);
   stream_.sendInitialHeader();
 }
 
@@ -51,7 +51,7 @@ JpegSnapshotStreamer::JpegSnapshotStreamer(const async_web_server_cpp::HttpReque
                                            rclcpp::Node::SharedPtr nh) :
     ImageTransportImageStreamer(request, connection, nh)
 {
-  quality_ = request.get_query_param_value_or_default<int>("quality", 95);
+  quality_ = request.get_query_param_value_or_default<int>("quality", 85);
 }
 
 JpegSnapshotStreamer::~JpegSnapshotStreamer()
