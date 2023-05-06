@@ -192,17 +192,18 @@ bool WebVideoServer::handle_stream(const async_web_server_cpp::HttpRequest &requ
           // explicitly avoid topics with more than one type
           break;
         }
-        auto & topic_name = topic_and_types.first;
-        if(topic_name == compressed_topic_name || (topic_name.find("/") == 0 && topic_name.substr(1) == compressed_topic_name)){
-          did_find_compressed_topic = true;
-          break;
-        }
+        // auto & topic_name = topic_and_types.first;
+        // if(topic_name == compressed_topic_name || (topic_name.find("/") == 0 && topic_name.substr(1) == compressed_topic_name)){
+        //   did_find_compressed_topic = true;
+        //   break;
+        // }
       }
-      if (!did_find_compressed_topic)
-      {
-        RCLCPP_WARN(nh_->get_logger(), "Could not find compressed image topic for %s, falling back to mjpeg", topic.c_str());
-        type = "mjpeg";
-      }
+      // if (!did_find_compressed_topic)
+      // {
+      //   RCLCPP_WARN(nh_->get_logger(), "Could not find compressed image topic for %s, falling back to mjpeg", topic.c_str());
+      //   type = "mjpeg";
+      // }
+      RCLCPP_INFO(nh_->get_logger(), "Added Stream: %s", compressed_topic_name.c_str());
     }
     boost::shared_ptr<ImageStreamer> streamer = stream_types_[type]->create_streamer(request, connection, nh_);
     streamer->start();
@@ -249,19 +250,19 @@ bool WebVideoServer::handle_stream_viewer(const async_web_server_cpp::HttpReques
           // explicitly avoid topics with more than one type
           break;
         }
-        auto & topic_name = topic_and_types.first;
-        if(topic_name == compressed_topic_name || (topic_name.find("/") == 0 && topic_name.substr(1) == compressed_topic_name)){
-          did_find_compressed_topic = true;
-          break;
-        }
+        // auto & topic_name = topic_and_types.first;
+        // if(topic_name == compressed_topic_name || (topic_name.find("/") == 0 && topic_name.substr(1) == compressed_topic_name)){
+        //   did_find_compressed_topic = true;
+        //   break;
+        // }
       }
-      if (!did_find_compressed_topic)
-      {
-        RCLCPP_WARN(nh_->get_logger(), "Could not find compressed image topic for %s, falling back to mjpeg", topic.c_str());
-        type = "mjpeg";
-      }
+      // if (!did_find_compressed_topic)
+      // {
+      //   RCLCPP_WARN(nh_->get_logger(), "Could not find compressed image topic for %s, falling back to mjpeg", topic.c_str());
+      //   type = "mjpeg";
+      // }
+      RCLCPP_INFO(nh_->get_logger(), "Added Stream: %s", compressed_topic_name.c_str());
     }
-
     async_web_server_cpp::HttpReply::builder(async_web_server_cpp::HttpReply::ok).header("Connection", "close").header(
         "Server", "web_video_server").header("Content-type", "text/html;").write(connection);
 
