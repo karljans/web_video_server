@@ -9,7 +9,7 @@ MultipartStream::MultipartStream(
     async_web_server_cpp::HttpConnectionPtr& connection,
     const std::string& boundry,
     std::size_t max_queue_size)
-  : get_now_(get_now), connection_(connection), boundry_(boundry), max_queue_size_(max_queue_size)
+  : get_now_(get_now), connection_(connection), boundry_(boundry), max_queue_size_(0)
 {}
 
 void MultipartStream::sendInitialHeader() {
@@ -81,4 +81,7 @@ bool MultipartStream::isBusy() {
   return !(max_queue_size_ == 0 || pending_footers_.size() < max_queue_size_);
 }
 
+bool MultipartStream::isBufferEmpty() {
+  return connection_->get_buffer_empty();
+}
 }

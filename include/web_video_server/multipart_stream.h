@@ -28,6 +28,8 @@ public:
   void sendPart(const rclcpp::Time &time, const std::string& type, const boost::asio::const_buffer &buffer,
 		async_web_server_cpp::HttpConnection::ResourcePtr resource);
 
+  bool isBufferEmpty();
+
 private:
   bool isBusy();
 
