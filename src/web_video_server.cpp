@@ -193,7 +193,6 @@ bool WebVideoServer::handle_stream(const async_web_server_cpp::HttpRequest &requ
           // explicitly avoid topics with more than one type
           break;
         }
-        RCLCPP_INFO(nh_->get_logger(), "topic_and_types.first: %s", topic_and_types.first.c_str());
         if (topic_and_types.first == topic + "/compressed") {
           did_find_compressed_topic = true;
           break;
@@ -229,6 +228,8 @@ bool WebVideoServer::handle_snapshot(const async_web_server_cpp::HttpRequest &re
   std::string type = request.get_query_param_value_or_default("type", __default_stream_type);
   std::string topic = request.get_query_param_value_or_default("topic", "");
   
+  boost::shared_ptr<ImageStreamer> streamer;
+
   if (stream_types_.find(type) != stream_types_.end())
   {
 
@@ -243,7 +244,6 @@ bool WebVideoServer::handle_snapshot(const async_web_server_cpp::HttpRequest &re
           // explicitly avoid topics with more than one type
           break;
         }
-        RCLCPP_INFO(nh_->get_logger(), "topic_and_types.first: %s", topic_and_types.first.c_str());
         if (topic_and_types.first == topic + "/compressed") {
           did_find_compressed_topic = true;
           break;
@@ -255,11 +255,16 @@ bool WebVideoServer::handle_snapshot(const async_web_server_cpp::HttpRequest &re
         async_web_server_cpp::HttpReply::stock_reply(async_web_server_cpp::HttpReply::not_found)(request, connection, begin, end);
         return true;
       }
+      streamer = boost::shared_ptr<ImageStreamer>(new RosCompressedSnapshotStreamer(request, connection, nh_));
+    }
+
+    else
+    {
+      streamer = boost::shared_ptr<ImageStreamer>(new JpegSnapshotStreamer(request, connection, nh_));
     }
 
     RCLCPP_INFO(nh_->get_logger(), "Snapshot request for topic %s, type %s", topic.c_str(), type.c_str());
 
-    boost::shared_ptr<ImageStreamer> streamer(new JpegSnapshotStreamer(request, connection, nh_));
     streamer->start();
 
     boost::mutex::scoped_lock lock(subscriber_mutex_);
@@ -293,7 +298,6 @@ bool WebVideoServer::handle_stream_viewer(const async_web_server_cpp::HttpReques
           // explicitly avoid topics with more than one type
           break;
         }
-        RCLCPP_INFO(nh_->get_logger(), "topic_and_types.first: %s", topic_and_types.first.c_str());
         if (topic_and_types.first == topic + "/compressed") {
           did_find_compressed_topic = true;
           break;

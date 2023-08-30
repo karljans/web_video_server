@@ -111,21 +111,21 @@ std::string RosCompressedStreamerType::create_viewer(const async_web_server_cpp:
   return ss.str();
 }
 
-RosCompressedImageStreamer::RosCompressedImageStreamer(const async_web_server_cpp::HttpRequest &request,
+RosCompressedSnapshotStreamer::RosCompressedSnapshotStreamer(const async_web_server_cpp::HttpRequest &request,
                              async_web_server_cpp::HttpConnectionPtr connection, rclcpp::Node::SharedPtr nh) :
   ImageStreamer(request, connection, nh), stream_(std::bind(&rclcpp::Node::now, nh), connection)
 {
-  stream_.sendInitialHeader();
 }
 
-RosCompressedImageStreamer::~RosCompressedImageStreamer()
+RosCompressedSnapshotStreamer::~RosCompressedSnapshotStreamer()
 {
   this->inactive_ = true;
   boost::mutex::scoped_lock lock(send_mutex_); // protects sendImage.
 }
 
-void RosCompressedImageStreamer::start() {
+void RosCompressedSnapshotStreamer::start() {
 
+  RCLCPP_INFO(nh_->get_logger(), "RosCompressedSnapshotStreamer::start()");
   // Create a QoS profile using the sensor message preset
   rmw_qos_profile_t sensor_qos = rmw_qos_profile_sensor_data;
 
@@ -135,10 +135,10 @@ void RosCompressedImageStreamer::start() {
   std::string compressed_topic = topic_ + "/compressed";
 
   image_sub_ = nh_->create_subscription<sensor_msgs::msg::CompressedImage>(compressed_topic, compressed_qos, 
-                                                                           std::bind(&RosCompressedImageStreamer::imageCallback, this, std::placeholders::_1));
+                                                                           std::bind(&RosCompressedSnapshotStreamer::imageCallback, this, std::placeholders::_1));
 }
 
-void RosCompressedImageStreamer::restreamFrame(double max_age)
+void RosCompressedSnapshotStreamer::restreamFrame(double max_age)
 {
   if (inactive_ || (last_msg == 0))
     return;
@@ -149,7 +149,7 @@ void RosCompressedImageStreamer::restreamFrame(double max_age)
   }
 }
 
-void RosCompressedImageStreamer::sendImage(const sensor_msgs::msg::CompressedImage::ConstSharedPtr msg,
+void RosCompressedSnapshotStreamer::sendImage(const sensor_msgs::msg::CompressedImage::ConstSharedPtr msg,
                                            const rclcpp::Time &time) {
   try {
     std::string content_type;
@@ -164,8 +164,29 @@ void RosCompressedImageStreamer::sendImage(const sensor_msgs::msg::CompressedIma
       return;
     }
 
-    stream_.sendPart(time, content_type, boost::asio::buffer(msg->data), msg);
+    char stamp[20];
+    sprintf(stamp, "%.06lf", time.seconds());
+    async_web_server_cpp::HttpReply::builder(async_web_server_cpp::HttpReply::ok)
+        .header("Connection", "close")
+        .header("Server", "web_video_server")
+        .header("Cache-Control",
+                "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, "
+                "max-age=0")
+        .header("X-Timestamp", stamp)
+        .header("Pragma", "no-cache")
+        .header("Content-type", "image/jpeg")
+        .header("Access-Control-Allow-Origin", "*")
+        .header("Content-Length",
+                boost::lexical_cast<std::string>(msg->data.size()))
+        .write(connection_);
+
+    // TODO: this is a hack to get around the fact that write() doesn't take a const buffer
+    // I know you shouldn't const_cast, but this is the only way to get it to compile
+    // without changing the async_web_server code or copying the buffer. Maybe change async_web_server?
+    connection_->write_and_clear(const_cast<std::vector<uchar>&>(msg->data));
+    inactive_ = true;
   }
+
   catch (boost::system::system_error &e)
   {
     // happens when client disconnects
@@ -175,27 +196,28 @@ void RosCompressedImageStreamer::sendImage(const sensor_msgs::msg::CompressedIma
   }
   catch (std::exception &e)
   {
-    // TODO THROTTLE with 30
     RCLCPP_ERROR(nh_->get_logger(), "exception: %s", e.what());
     inactive_ = true;
     return;
   }
   catch (...)
   {
-    // TODO THROTTLE with 30
     RCLCPP_ERROR(nh_->get_logger(), "exception");
     inactive_ = true;
     return;
   }
 }
 
-void RosCompressedImageStreamer::imageCallback(const sensor_msgs::msg::CompressedImage::ConstSharedPtr msg) {
+void RosCompressedSnapshotStreamer::imageCallback(const sensor_msgs::msg::CompressedImage::ConstSharedPtr msg) {
   
-  if (stream_.isBufferEmpty()){
+  if (stream_.isBufferEmpty()) {
     last_msg = msg;
     last_frame = rclcpp::Time(msg->header.stamp);
     boost::mutex::scoped_lock lock(send_mutex_); // protects last_msg and last_frame
     sendImage(last_msg, last_frame);
+
+    // Remove the subscription to the topic
+    image_sub_.reset();
   }
 }
 

@@ -3,8 +3,11 @@
 
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include "web_video_server/image_streamer.h"
+
 #include "async_web_server_cpp/http_request.hpp"
 #include "async_web_server_cpp/http_connection.hpp"
+#include "async_web_server_cpp/http_reply.hpp"
+
 #include "web_video_server/multipart_stream.h"
 
 namespace web_video_server
@@ -31,12 +34,12 @@ private:
   boost::mutex send_mutex_;
 };
 
-class RosCompressedImageStreamer : public ImageStreamer
+class RosCompressedSnapshotStreamer : public ImageStreamer
 {
 public:
-  RosCompressedImageStreamer(const async_web_server_cpp::HttpRequest &request, async_web_server_cpp::HttpConnectionPtr connection,
+  RosCompressedSnapshotStreamer(const async_web_server_cpp::HttpRequest &request, async_web_server_cpp::HttpConnectionPtr connection,
 			rclcpp::Node::SharedPtr nh);
-  ~RosCompressedImageStreamer();
+  ~RosCompressedSnapshotStreamer();
   virtual void start();
   virtual void restreamFrame(double max_age);
 
