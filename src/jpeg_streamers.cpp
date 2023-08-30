@@ -88,26 +88,4 @@ void JpegSnapshotStreamer::sendImage(const cv::Mat &img, const rclcpp::Time &tim
   inactive_ = true;
 }
 
-void JpegSnapshotStreamer::sendCompressedImage(const std::vector<uchar> &compressed_img, const rclcpp::Time &time)
-{
-  char stamp[20];
-  sprintf(stamp, "%.06lf", time.seconds());
-
-  async_web_server_cpp::HttpReply::builder(async_web_server_cpp::HttpReply::ok)
-      .header("Connection", "close")
-      .header("Server", "web_video_server")
-      .header("Cache-Control",
-              "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, "
-              "max-age=0")
-      .header("X-Timestamp", stamp)
-      .header("Pragma", "no-cache")
-      .header("Content-type", "image/jpeg")
-      .header("Access-Control-Allow-Origin", "*")
-      .header("Content-Length",
-              boost::lexical_cast<std::string>(encoded_buffer.size()))
-      .write(connection_);
-  connection_->write_and_clear(compressed_img);
-  inactive_ = true;
-}
-
 }
