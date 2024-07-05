@@ -10,9 +10,9 @@
 #include "web_video_server/ros_compressed_streamer.h"
 #include "web_video_server/jpeg_streamers.h"
 #include "web_video_server/png_streamers.h"
-#include "web_video_server/vp8_streamer.h"
-#include "web_video_server/h264_streamer.h"
-#include "web_video_server/vp9_streamer.h"
+// #include "web_video_server/vp8_streamer.h"
+// #include "web_video_server/h264_streamer.h"
+// #include "web_video_server/vp9_streamer.h"
 #include "async_web_server_cpp/http_reply.hpp"
 
 using namespace std::chrono_literals;
@@ -95,9 +95,9 @@ WebVideoServer::WebVideoServer(rclcpp::Node::SharedPtr &nh, rclcpp::Node::Shared
   stream_types_["mjpeg"] = boost::shared_ptr<ImageStreamerType>(new MjpegStreamerType());
   stream_types_["png"] = boost::shared_ptr<ImageStreamerType>(new PngStreamerType());
   stream_types_["ros_compressed"] = boost::shared_ptr<ImageStreamerType>(new RosCompressedStreamerType());
-  stream_types_["vp8"] = boost::shared_ptr<ImageStreamerType>(new Vp8StreamerType());
-  stream_types_["h264"] = boost::shared_ptr<ImageStreamerType>(new H264StreamerType());
-  stream_types_["vp9"] = boost::shared_ptr<ImageStreamerType>(new Vp9StreamerType());
+  // stream_types_["vp8"] = boost::shared_ptr<ImageStreamerType>(new Vp8StreamerType());
+  // stream_types_["h264"] = boost::shared_ptr<ImageStreamerType>(new H264StreamerType());
+  // stream_types_["vp9"] = boost::shared_ptr<ImageStreamerType>(new Vp9StreamerType());
 
   handler_group_.addHandlerForPath("/", boost::bind(&WebVideoServer::handle_list_streams, this, _1, _2, _3, _4));
   handler_group_.addHandlerForPath("/stream", boost::bind(&WebVideoServer::handle_stream, this, _1, _2, _3, _4));
