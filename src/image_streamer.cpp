@@ -1,6 +1,6 @@
 #include <iostream>
 #include <rmw/types.h>
-#include <cv_bridge/cv_bridge.h>
+#include <cv_bridge/cv_bridge.hpp>
 #include "web_video_server/image_streamer.h"
 
 namespace web_video_server
